@@ -12,6 +12,7 @@ from mongoengine import connect
 from pymongo import MongoClient
 import time
 import datetime
+import dateutil
 import json
 import pprint
 from googletrans import Translator
@@ -57,15 +58,18 @@ class Main(MongoService):
                                 text_to_sentiment)
 
                             subratings = self.map_subratings(review_translated)
-                            print(subratings)
                             subratings_normalized = self.normalize_subratings(
                                 subratings)
-                            print(subratings_normalized)
+
+                            date_publish = dateutil.parser.parse(
+                                review_translated['review']['published_date'])
 
                             data = {
                                 "hotel": hotel,
                                 "review_translated": review_translated,
                                 "publish_date": review_translated['review']['published_date'],
+                                "month": date_publish.month,
+                                "year": date_publish.year,
                                 "location_id": location['location_id'],
                                 "hotel_id": hotel['location_id'],
                                 "review_id": review_translated['review_id'],
@@ -76,6 +80,7 @@ class Main(MongoService):
                                 "wordnet_sentiment": wordnet,
                                 "created_at": datenow
                             }
+                            # pprint.pprint(data)
 
                             sentimentreview_service.create(data)
                         else:

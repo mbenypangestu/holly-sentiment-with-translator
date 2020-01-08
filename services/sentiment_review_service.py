@@ -24,6 +24,25 @@ class SentimentReviewService(MongoService):
         })
         return sentiment_reviews
 
+    def get_review_group_hotel_date(self, hotel_id):
+        sentiment_reviews = self.db.sentiment_review.aggregate([
+            {
+                "$group": {
+                    "_id": {
+                        "hotel_id": "$hotel_id",
+                        "month": "$month",
+                        "year": "$year",
+                    },
+                    "location_id": {"$push": "$location_id"},
+                    "review_id": {"$push": "$review_id"},
+                    "subratings_normalized": {"$push": "$subratings_normalized"},
+                    "wordnet_sentiment": {"$push": "$wordnet_sentiment"},
+                    "vader_sentiment": {"$push": "$vader_sentiment"},
+                },
+            }
+        ])
+        return sentiment_reviews
+
     def create(self, sentiment_review):
         try:
             result = (self.db.sentiment_review.insert_one(
