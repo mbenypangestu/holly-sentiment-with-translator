@@ -15,7 +15,7 @@ class MongoService:
     def connect_mongo(self):
         try:
             self.client = MongoClient(host=self.host, port=self.port)
-            self.db = self.client.holly_test_2
+            self.db = self.client.holly_production
 
             print("Success connecting to mongodb !\n")
 

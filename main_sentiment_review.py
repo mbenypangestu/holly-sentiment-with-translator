@@ -1,0 +1,172 @@
+from translator.translator import LanguageTranslator
+from database.mongo_service import MongoService
+from database.solr_service import SolrService
+from services.location_service import LocationService
+from services.hotel_service import HotelService
+from services.review_service import ReviewService
+from services.sentiment_review_service import SentimentReviewService
+from services.review_translated_service import ReviewTranslatedService
+from sentiment.sentiment import SentimentAnalyzer
+
+from mongoengine import connect
+from pymongo import MongoClient
+import time
+import datetime
+import json
+import pprint
+from googletrans import Translator
+
+
+class Main(MongoService):
+    def __init__(self):
+        super().__init__()
+        self.start()
+
+    def start(self):
+        datenow = datetime.datetime.now()
+
+        sentimentreview_service = SentimentReviewService()
+        sentiment_analyzer = SentimentAnalyzer()
+
+        location_service = LocationService()
+        hotel_service = HotelService()
+        reviewtranslated_service = ReviewTranslatedService()
+
+        locations = location_service.get_all_locations()
+
+        for i, location in enumerate(locations):
+            hotels = hotel_service.get_hotels_by_locationid(
+                location['location_id'])
+
+            for j, hotel in enumerate(hotels):
+                reviews_translated = reviewtranslated_service.get_review_by_hotel_locid(
+                    hotel['location_id'])
+                sentimentreviews_on_hotel = sentimentreview_service.get_review_by_hotel_locid(
+                    hotel['location_id'])
+
+                for r, review_translated in enumerate(reviews_translated):
+                    text_to_sentiment = review_translated['text_translated']
+
+                    try:
+                        isexist_review = any(x['review_id'] == review_translated['review_id']
+                                             for x in sentimentreviews_on_hotel)
+                        if not isexist_review:
+                            vader = sentiment_analyzer.get_vader(
+                                text_to_sentiment)
+                            wordnet = sentiment_analyzer.get_wordnet(
+                                text_to_sentiment)
+
+                            subratings = self.map_subratings(review_translated)
+                            print(subratings)
+                            subratings_normalized = self.normalize_subratings(
+                                subratings)
+                            print(subratings_normalized)
+
+                            data = {
+                                "hotel": hotel,
+                                "review_translated": review_translated,
+                                "publish_date": review_translated['review']['published_date'],
+                                "location_id": location['location_id'],
+                                "hotel_id": hotel['location_id'],
+                                "review_id": review_translated['review_id'],
+                                "subratings": subratings,
+                                "subratings_normalized": subratings_normalized,
+                                "text_to_sentiment": text_to_sentiment,
+                                "vader_sentiment": vader,
+                                "wordnet_sentiment": wordnet,
+                                "created_at": datenow
+                            }
+
+                            sentimentreview_service.create(data)
+                        else:
+                            print("---> Review (",
+                                  review_translated['review_id'], ") on table Translated Review is already exist")
+
+                    except Exception as err:
+                        print(str("-----> Err : ", err))
+                        continue
+
+                # solrService = SolrService()
+                # count = solrService.getCollection("test_review", "test")
+                # print("Count : ", count)
+
+    def map_subratings(self, review_translated):
+        subratings = review_translated['review']['subratings']
+        mapped_subratings = {
+            'rooms': 0,
+            'value': 0,
+            'sleep_quality': 0,
+            'location': 0,
+            'cleanliness': 0,
+            'service': 0
+        }
+
+        if len(subratings) > 0:
+            for i, subrate in enumerate(subratings):
+                if subrate['name'] == "Rooms":
+                    mapped_subratings.update(
+                        {'rooms': subrate['value']})
+                elif subrate['name'] == "Value":
+                    mapped_subratings.update(
+                        {'value': subrate['value']})
+                elif subrate['name'] == "Sleep Quality":
+                    mapped_subratings.update(
+                        {'sleep_quality': subrate['value']})
+                elif subrate['name'] == "Location":
+                    mapped_subratings.update(
+                        {'location': subrate['value']})
+                elif subrate['name'] == "Cleanliness":
+                    mapped_subratings.update(
+                        {'cleanliness': subrate['value']})
+                elif subrate['name'] == "Service":
+                    mapped_subratings.update(
+                        {'service': subrate['value']})
+
+        return mapped_subratings
+
+    def normalize_subratings(self, subratings):
+        normalize_subrating = subratings.copy()
+
+        normalize_subrating.update(
+            {'rooms': float(normalize_subrating['rooms']) / 5})
+        normalize_subrating.update(
+            {'value': float(normalize_subrating['value']) / 5})
+        normalize_subrating.update(
+            {'sleep_quality': float(normalize_subrating['sleep_quality']) / 5})
+        normalize_subrating.update(
+            {'location': float(normalize_subrating['location']) / 5})
+        normalize_subrating.update(
+            {'cleanliness': float(normalize_subrating['cleanliness']) / 5})
+        normalize_subrating.update(
+            {'service': float(normalize_subrating['service']) / 5})
+
+        return normalize_subrating
+
+    def store_sentiment(self, reviews):
+        language_translator = LanguageTranslator()
+        sentiment_analyzer = SentimentAnalyzer()
+        sentiment_service = SentimentReviewService()
+
+        for i, review in enumerate(reviews):
+            text_to_translate = review['text']
+            text_translated = language_translator.translate(text_to_translate)
+            vader = sentiment_analyzer.get_vader(text_translated)
+            wordnet = sentiment_analyzer.get_wordnet(text_translated)
+
+            data = {
+                "location_id": review['hotel_detail']['locationID'],
+                "location_object_id": review['hotel_detail']['locationObjectID'],
+                "hotel_location_id": review['hotel_locationID'],
+                "hotel_location_object_id": review['hotel_ObjectId'],
+                "text_to_translate": text_to_translate,
+                "text_translated": text_translated,
+                "vader_sentiment": vader,
+                "wordnet_sentiment": wordnet,
+                "created_at": datetime.datetime.now()
+            }
+            sentiment_service.create(data)
+
+
+if __name__ == "__main__":
+    Main()
+    # time.sleep(10000)

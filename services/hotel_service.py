@@ -17,6 +17,10 @@ class HotelService(MongoService):
         hotels = self.db.hotel.find()
         return hotels
 
+    def get_hotels_by_locationid(self, location_id):
+        hotels = self.db.hotel.find({'locationID': location_id})
+        return hotels
+
     def is_hotel_exist(self, hotel_id):
         hotel = self.db.hotel.find({'id': hotel_id})
         if hotel.count() > 0:

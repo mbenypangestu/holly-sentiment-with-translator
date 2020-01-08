@@ -18,6 +18,24 @@ class ReviewService(MongoService):
         reviews = self.db.review.find()
         return reviews
 
+    def get_review_byid(self, review_id):
+        review = self.db.review.find({'id': review_id})
+        return review
+
+    def get_review_by_hotel_locationid(self, hotel_locationid):
+        review = self.db.review.find({'location_id': hotel_locationid})
+        return review
+
+    def update_review_byid(self, review_id, data_update):
+        review = self.db.review.update_one(
+            {
+                'id': review_id
+            }, {
+                "$set": data_update
+            }
+        )
+        return review
+
     def get_lessthan_datetime(self, datenow):
         reviews = self.db.review.aggregate([
             {
