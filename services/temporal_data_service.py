@@ -24,6 +24,18 @@ class TemporalDataService(MongoService):
         })
         return temporal_datas
 
+    def isexist_temporal_data_by_hotel_date(self, hotel_id, year, month):
+        temporal_datas = self.db.temporal_data.find({
+            'hotel_id': hotel_id, "year": year,  "month": month,
+        })
+
+        print(temporal_datas.count())
+
+        if temporal_datas.count() > 0:
+            return True
+        else:
+            return False
+
     def create(self, temporal_data):
         try:
             result = (self.db.temporal_data.insert_one(

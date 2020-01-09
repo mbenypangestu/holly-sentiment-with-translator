@@ -38,6 +38,7 @@ class SentimentReviewService(MongoService):
                     "subratings_normalized": {"$push": "$subratings_normalized"},
                     "wordnet_sentiment": {"$push": "$wordnet_sentiment"},
                     "vader_sentiment": {"$push": "$vader_sentiment"},
+                    "count": {"$sum": 1}
                 },
             }
         ])

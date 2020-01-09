@@ -6,7 +6,7 @@ from services.hotel_service import HotelService
 from services.review_service import ReviewService
 from services.review_translated_service import ReviewTranslatedService
 from services.sentiment_review_service import SentimentReviewService
-from services.sentiment_hotel_service import TemporalDataService
+from services.temporal_data_service import TemporalDataService
 from sentiment.sentiment import SentimentAnalyzer
 
 from mongoengine import connect
@@ -36,10 +36,12 @@ class Main(MongoService):
                 location['location_id'])
 
             for j, hotel in enumerate(hotels):
+                print(self.count, "---------------------------------------------------------} ",
+                      hotel['name'])
                 self.calculate_sentiment_score(hotel)
-
-                break
-            break
+                self.count += 1
+            #     break
+            # break
 
     def calculate_sentiment_score(self, hotel):
         datenow = datetime.datetime.now()
@@ -64,7 +66,12 @@ class Main(MongoService):
             vader_neu_hotel = 0
             vader_compound_hotel = 0
 
-            try:
+            print(sentiment_review['_id']['hotel_id'], " - ", sentiment_review['_id']
+                  ['year'], " - ", sentiment_review['_id']['month'])
+            is_exist_temporalhotel = temporaldata_service.isexist_temporal_data_by_hotel_date(
+                hotel['location_id'], sentiment_review['_id']['year'], sentiment_review['_id']['month'])
+            print(is_exist_temporalhotel)
+            if not is_exist_temporalhotel:
                 for s, subrating in enumerate(sentiment_review['subratings_normalized']):
                     rating_rooms += subrating['rooms']
                     rating_value += subrating['value']
@@ -73,17 +80,19 @@ class Main(MongoService):
                     rating_cleanliness += subrating['cleanliness']
                     rating_service += subrating['service']
 
-                for s, vader in enumerate(sentiment_review['vader_sentiment']):
+                for v, vader in enumerate(sentiment_review['vader_sentiment']):
                     vader_neg_hotel += vader['neg']
                     vader_pos_hotel += vader['pos']
                     vader_neu_hotel += vader['neu']
                     vader_compound_hotel += vader['compound']
 
-                for s, wordnet in enumerate(sentiment_review['wordnet_sentiment']):
+                for w, wordnet in enumerate(sentiment_review['wordnet_sentiment']):
                     wordnet_hotel += wordnet
 
-                rating_rooms /= len(sentiment_review['subratings_normalized'])
-                rating_value /= len(sentiment_review['subratings_normalized'])
+                rating_rooms /= len(
+                    sentiment_review['subratings_normalized'])
+                rating_value /= len(
+                    sentiment_review['subratings_normalized'])
                 rating_sleep_quality /= len(
                     sentiment_review['subratings_normalized'])
                 rating_location /= len(
@@ -102,7 +111,7 @@ class Main(MongoService):
                 wordnet_hotel /= len(sentiment_review['wordnet_sentiment'])
 
                 data = {
-                    "hotel_id": sentiment_review['_id']['hotel_id'],
+                    "hotel_id": hotel['location_id'],
                     "month": sentiment_review['_id']['month'],
                     "year": sentiment_review['_id']['year'],
                     "location_id": sentiment_review['location_id'][0],
@@ -120,15 +129,15 @@ class Main(MongoService):
                     "vader_compound_score": vader_compound_hotel,
                     "created_at": datenow
                 }
-                print(self.count, ".) Hotel ", hotel['name'], " : ",
+                print(".) Hotel ", hotel['name'], " : ",
                       sentiment_review['_id']['month'], "-", sentiment_review['_id']['year'])
                 temporaldata_service.create(data)
 
-                self.count += 1
-            except Exception as err:
-                print(str("-----> Error saving data sentiment hotel !"))
-                print(str("-----> Err : ", err))
-                continue
+            else:
+                print(self.count,
+                      ".) -----> Data temporal hotel is already exist !")
+
+            # self.count += 1
 
 
 if __name__ == "__main__":
