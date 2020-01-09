@@ -1,4 +1,3 @@
-from translator.translator import LanguageTranslator
 from database.mongo_service import MongoService
 from database.solr_service import SolrService
 from services.location_service import LocationService
@@ -127,6 +126,8 @@ class Main(MongoService):
                     "vader_pos_score": vader_pos_hotel,
                     "vader_neu_score": vader_neu_hotel,
                     "vader_compound_score": vader_compound_hotel,
+                    "cluster": 0,
+                    "error_rate ": 0,
                     "created_at": datenow
                 }
                 print(".) Hotel ", hotel['name'], " : ",
