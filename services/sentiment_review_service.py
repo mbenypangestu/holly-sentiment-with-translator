@@ -24,22 +24,38 @@ class SentimentReviewService(MongoService):
         })
         return sentiment_reviews
 
+    def get_maxmin_years_inhotel(self, hotel_id, sort):
+        sentiment_review = self.db.sentiment_review.find_one({
+            '$query': {'hotel_id': hotel_id},
+            '$orderby': {'year': sort}
+        })
+        return sentiment_review['year']
+
     def get_review_group_hotel_date(self, hotel_id):
         sentiment_reviews = self.db.sentiment_review.aggregate([
             {
+                "$match": {
+                    "hotel_id": hotel_id
+                }
+            }, {
                 "$group": {
                     "_id": {
-                        "hotel_id": "$hotel_id",
                         "month": "$month",
                         "year": "$year",
                     },
                     "location_id": {"$push": "$location_id"},
+                    "hotel_id": {"$push": "$hotel_id"},
                     "review_id": {"$push": "$review_id"},
                     "subratings_normalized": {"$push": "$subratings_normalized"},
                     "wordnet_sentiment": {"$push": "$wordnet_sentiment"},
                     "vader_sentiment": {"$push": "$vader_sentiment"},
                     "count": {"$sum": 1}
                 },
+            }, {
+                "$sort": {
+                    "_id.year": 1,
+                    "_id.month": 1,
+                }
             }
         ])
         return sentiment_reviews

@@ -1,5 +1,6 @@
 from mongoengine import connect
 from pymongo import MongoClient
+from datetime import datetime
 
 
 class MongoService:
@@ -8,6 +9,7 @@ class MongoService:
     client = None
     db = None
     topic = "hotel_reviews"
+    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     def __init__(self):
         self.connect_mongo()
@@ -17,7 +19,6 @@ class MongoService:
             self.client = MongoClient(host=self.host, port=self.port)
             self.db = self.client.holly_production
 
-            print("Success connecting to mongodb !\n")
-
+            print("[", self.now, "]---> Success connecting to database!")
         except:
-            print("Failed to connect mongo database !\n")
+            print("[", self.now, "]---> Failed to connect database!")

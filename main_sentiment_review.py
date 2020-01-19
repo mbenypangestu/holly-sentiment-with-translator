@@ -32,8 +32,9 @@ class Main(MongoService):
         location_service = LocationService()
         hotel_service = HotelService()
         reviewtranslated_service = ReviewTranslatedService()
+        review_service = ReviewService()
 
-        locations = location_service.get_all_locations()
+        locations = location_service.get_locations_indonesia()
 
         for i, location in enumerate(locations):
             hotels = hotel_service.get_hotels_by_locationid(
@@ -45,58 +46,112 @@ class Main(MongoService):
                 sentimentreviews_on_hotel = sentimentreview_service.get_review_by_hotel_locid(
                     hotel['location_id'])
 
-                for r, review_translated in enumerate(reviews_translated):
-                    text_to_sentiment = review_translated['text_translated']
+                if reviews_translated == None:
+                    print("Ada translated")
+                    for r, review_translated in enumerate(reviews_translated):
+                        text_to_sentiment = review_translated['text_translated']
 
-                    try:
-                        isexist_review = any(x['review_id'] == review_translated['review_id']
-                                             for x in sentimentreviews_on_hotel)
-                        if not isexist_review:
-                            vader = sentiment_analyzer.get_vader(
-                                text_to_sentiment)
-                            wordnet = sentiment_analyzer.get_wordnet(
-                                text_to_sentiment)
+                        try:
+                            isexist_review = any(x['review_id'] == review_translated['review_id']
+                                                 for x in sentimentreviews_on_hotel)
+                            if not isexist_review:
+                                vader = sentiment_analyzer.get_vader(
+                                    text_to_sentiment)
+                                wordnet = sentiment_analyzer.get_sentiwordnet(
+                                    text_to_sentiment)
 
-                            subratings = self.map_subratings(review_translated)
-                            subratings_normalized = self.normalize_subratings(
-                                subratings)
+                                subratings = self.map_subratings(
+                                    review_translated)
+                                subratings_normalized = self.normalize_subratings(
+                                    subratings)
 
-                            date_publish = dateutil.parser.parse(
-                                review_translated['review']['published_date'])
+                                date_publish = dateutil.parser.parse(
+                                    review_translated['review']['published_date'])
 
-                            data = {
-                                "hotel": hotel,
-                                "review_translated": review_translated,
-                                "publish_date": review_translated['review']['published_date'],
-                                "month": date_publish.month,
-                                "year": date_publish.year,
-                                "location_id": location['location_id'],
-                                "hotel_id": hotel['location_id'],
-                                "review_id": review_translated['review_id'],
-                                "subratings": subratings,
-                                "subratings_normalized": subratings_normalized,
-                                "text_to_sentiment": text_to_sentiment,
-                                "vader_sentiment": vader,
-                                "wordnet_sentiment": wordnet,
-                                "created_at": datenow
-                            }
-                            # pprint.pprint(data)
+                                data = {
+                                    "hotel": hotel,
+                                    "review_translated": review_translated,
+                                    "publish_date": review_translated['review']['published_date'],
+                                    "month": date_publish.month,
+                                    "year": date_publish.year,
+                                    "location_id": location['location_id'],
+                                    "hotel_id": hotel['location_id'],
+                                    "review_id": review_translated['review_id'],
+                                    "subratings": subratings,
+                                    "subratings_normalized": subratings_normalized,
+                                    "text_to_sentiment": text_to_sentiment,
+                                    "vader_sentiment": vader,
+                                    "wordnet_sentiment": wordnet,
+                                    "created_at": datenow
+                                }
+                                # pprint.pprint(data)
 
-                            sentimentreview_service.create(data)
-                        else:
-                            print("---> Review (",
-                                  review_translated['review_id'], ") on table Translated Review is already exist")
+                                sentimentreview_service.create(data)
+                            else:
+                                print("---> Review (",
+                                      review_translated['review_id'], ") on table Translated Review is already exist")
 
-                    except Exception as err:
-                        print(str("-----> Err : ", err))
-                        continue
+                        except Exception as err:
+                            print(str("-----> Err : ", err))
+                            continue
+                else:
+                    print("Tidak ada translate")
+                    reviews = review_service.get_review_by_hotel_locationid(
+                        hotel['location_id'])
+
+                    for r, review in enumerate(reviews):
+
+                        try:
+                            isexist_review = any(x['review_id'] == review['id']
+                                                 for x in sentimentreviews_on_hotel)
+
+                            if not isexist_review:
+                                subratings = self.map_subratings(
+                                    review)
+                                subratings_normalized = self.normalize_subratings(
+                                    subratings)
+
+                                date_publish = dateutil.parser.parse(
+                                    review['published_date'])
+
+                                data = {
+                                    "hotel": hotel,
+                                    "review": review,
+                                    "publish_date": review['published_date'],
+                                    "month": date_publish.month,
+                                    "year": date_publish.year,
+                                    "location_id": location['location_id'],
+                                    "hotel_id": hotel['location_id'],
+                                    "review_id": review['id'],
+                                    "subratings": subratings,
+                                    "subratings_normalized": subratings_normalized,
+                                    "text_to_sentiment": "",
+                                    "vader_sentiment": {
+                                        'neg' : 0,
+                                        'pos' : 0,
+                                        'neu' : 0,
+                                        'compound' : 0
+                                    },
+                                    "wordnet_sentiment": 0,
+                                    "created_at": datenow
+                                }
+                                # pprint.pprint(data)
+
+                                sentimentreview_service.create(data)
+                            else:
+                                print("---> Review (",
+                                      review['id'], ") on table sentiment Review is already exist")
+
+                        except Exception as err:
+                            print(str("-----> Err : ", err))
+                            continue
 
                 # solrService = SolrService()
                 # count = solrService.getCollection("test_review", "test")
                 # print("Count : ", count)
 
     def map_subratings(self, review_translated):
-        subratings = review_translated['review']['subratings']
+        subratings = review_translated['subratings']
         mapped_subratings = {
             'rooms': 0,
             'value': 0,
@@ -156,7 +211,7 @@ class Main(MongoService):
             text_to_translate = review['text']
             text_translated = language_translator.translate(text_to_translate)
             vader = sentiment_analyzer.get_vader(text_translated)
-            wordnet = sentiment_analyzer.get_wordnet(text_translated)
+            wordnet = sentiment_analyzer.get_sentiwordnet(text_translated)
 
             data = {
                 "location_id": review['hotel_detail']['locationID'],

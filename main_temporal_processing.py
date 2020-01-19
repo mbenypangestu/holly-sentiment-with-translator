@@ -11,16 +11,21 @@ from sentiment.sentiment import SentimentAnalyzer
 from mongoengine import connect
 from pymongo import MongoClient
 import time
-import datetime
+from datetime import datetime
 import json
 import pprint
 from googletrans import Translator
 
+import copy
+
 
 class Main(MongoService):
+    now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+
     def __init__(self):
         super().__init__()
-
+        self.temporaldata_service = TemporalDataService()
+        self.sentimentreview_service = SentimentReviewService()
         self.count = 1
         self.start()
 
@@ -28,7 +33,7 @@ class Main(MongoService):
         location_service = LocationService()
         hotel_service = HotelService()
 
-        locations = location_service.get_all_locations()
+        locations = location_service.get_locations_indonesia()
 
         for i, location in enumerate(locations):
             hotels = hotel_service.get_hotels_by_locationid(
@@ -39,17 +44,15 @@ class Main(MongoService):
                       hotel['name'])
                 self.calculate_sentiment_score(hotel)
                 self.count += 1
-            #     break
-            # break
 
     def calculate_sentiment_score(self, hotel):
-        datenow = datetime.datetime.now()
+        datenow = datetime.now()
 
-        temporaldata_service = TemporalDataService()
-        sentimentreview_service = SentimentReviewService()
-        sentiment_reviews = sentimentreview_service.get_review_group_hotel_date(
-            hotel['location_id'])
+        sentiment_reviews = list(self.sentimentreview_service.get_review_group_hotel_date(
+            hotel['location_id']))
 
+        data_temp = None
+        i = 0
         for r, sentiment_review in enumerate(sentiment_reviews):
             rating_rooms = 0
             rating_value = 0
@@ -65,80 +68,121 @@ class Main(MongoService):
             vader_neu_hotel = 0
             vader_compound_hotel = 0
 
-            print(sentiment_review['_id']['hotel_id'], " - ", sentiment_review['_id']
-                  ['year'], " - ", sentiment_review['_id']['month'])
-            is_exist_temporalhotel = temporaldata_service.isexist_temporal_data_by_hotel_date(
-                hotel['location_id'], sentiment_review['_id']['year'], sentiment_review['_id']['month'])
-            print(is_exist_temporalhotel)
-            if not is_exist_temporalhotel:
-                for s, subrating in enumerate(sentiment_review['subratings_normalized']):
-                    rating_rooms += subrating['rooms']
-                    rating_value += subrating['value']
-                    rating_sleep_quality += subrating['sleep_quality']
-                    rating_location += subrating['location']
-                    rating_cleanliness += subrating['cleanliness']
-                    rating_service += subrating['service']
+            for s, subrating in enumerate(sentiment_review['subratings_normalized']):
+                rating_rooms += subrating['rooms']
+                rating_value += subrating['value']
+                rating_sleep_quality += subrating['sleep_quality']
+                rating_location += subrating['location']
+                rating_cleanliness += subrating['cleanliness']
+                rating_service += subrating['service']
+        
+            for v, vader in enumerate(sentiment_review['vader_sentiment']):
+                vader_neg_hotel += vader['neg']
+                vader_pos_hotel += vader['pos']
+                vader_neu_hotel += vader['neu']
+                vader_compound_hotel += vader['compound']
 
-                for v, vader in enumerate(sentiment_review['vader_sentiment']):
-                    vader_neg_hotel += vader['neg']
-                    vader_pos_hotel += vader['pos']
-                    vader_neu_hotel += vader['neu']
-                    vader_compound_hotel += vader['compound']
+            for w, wordnet in enumerate(sentiment_review['wordnet_sentiment']):
+                wordnet_hotel += wordnet
 
-                for w, wordnet in enumerate(sentiment_review['wordnet_sentiment']):
-                    wordnet_hotel += wordnet
+            rating_rooms /= len(
+                sentiment_review['subratings_normalized'])
+            rating_value /= len(
+                sentiment_review['subratings_normalized'])
+            rating_sleep_quality /= len(
+                sentiment_review['subratings_normalized'])
+            rating_location /= len(
+                sentiment_review['subratings_normalized'])
+            rating_cleanliness /= len(
+                sentiment_review['subratings_normalized'])
+            rating_service /= len(
+                sentiment_review['subratings_normalized'])
 
-                rating_rooms /= len(
-                    sentiment_review['subratings_normalized'])
-                rating_value /= len(
-                    sentiment_review['subratings_normalized'])
-                rating_sleep_quality /= len(
-                    sentiment_review['subratings_normalized'])
-                rating_location /= len(
-                    sentiment_review['subratings_normalized'])
-                rating_cleanliness /= len(
-                    sentiment_review['subratings_normalized'])
-                rating_service /= len(
-                    sentiment_review['subratings_normalized'])
+            vader_neg_hotel /= len(sentiment_review['vader_sentiment'])
+            vader_pos_hotel /= len(sentiment_review['vader_sentiment'])
+            vader_neu_hotel /= len(sentiment_review['vader_sentiment'])
+            vader_compound_hotel /= len(
+                sentiment_review['vader_sentiment'])
 
-                vader_neg_hotel /= len(sentiment_review['vader_sentiment'])
-                vader_pos_hotel /= len(sentiment_review['vader_sentiment'])
-                vader_neu_hotel /= len(sentiment_review['vader_sentiment'])
-                vader_compound_hotel /= len(
-                    sentiment_review['vader_sentiment'])
+            wordnet_hotel /= len(sentiment_review['wordnet_sentiment'])
 
-                wordnet_hotel /= len(sentiment_review['wordnet_sentiment'])
+            print("\nITERASI ", i, "\n")
 
-                data = {
-                    "hotel_id": hotel['location_id'],
-                    "month": sentiment_review['_id']['month'],
-                    "year": sentiment_review['_id']['year'],
-                    "location_id": sentiment_review['location_id'][0],
-                    "hotel": hotel,
-                    "rating_rooms": rating_rooms,
-                    "rating_value": rating_value,
-                    "rating_sleep_quality": rating_sleep_quality,
-                    "rating_location": rating_location,
-                    "rating_cleanliness": rating_cleanliness,
-                    "rating_service": rating_service,
-                    "wordnet_score": wordnet_hotel,
-                    "vader_neg_score": vader_neg_hotel,
-                    "vader_pos_score": vader_pos_hotel,
-                    "vader_neu_score": vader_neu_hotel,
-                    "vader_compound_score": vader_compound_hotel,
-                    "cluster": 0,
-                    "error_rate ": 0,
-                    "created_at": datenow
-                }
-                print(".) Hotel ", hotel['name'], " : ",
-                      sentiment_review['_id']['month'], "-", sentiment_review['_id']['year'])
-                temporaldata_service.create(data)
+            now_value_month = sentiment_review['_id']['month']
+            now_value_year = sentiment_review['_id']['year']
 
-            else:
-                print(self.count,
-                      ".) -----> Data temporal hotel is already exist !")
+            try:
+                next_value_month = sentiment_reviews[r+1]['_id']['month']
+                next_value_year = sentiment_reviews[r+1]['_id']['year']
+            except:
+                next_value_month = datenow.month + 1
+                next_value_year = datenow.year
 
-            # self.count += 1
+            for year in range(now_value_year, next_value_year+1):
+                for month in range(now_value_month, 13):
+                    if next_value_month <= month and year == next_value_year:
+                        print("Break month 1")
+                        break
+
+                    print("\nPERIODE :", month, "/", year)
+                    print("-> next :", next_value_month,
+                          "/", next_value_year)
+
+                    if sentiment_review['_id']['month'] == month and sentiment_review['_id']['year'] == year:
+                        print("--------------------------------> Changing")
+                        data = {
+                            "hotel_id": hotel['location_id'],
+                            "month": month,
+                            "year": year,
+                            "location_id": sentiment_review['location_id'][0],
+                            "hotel": hotel,
+                            "rating_rooms": rating_rooms,
+                            "rating_value": rating_value,
+                            "rating_sleep_quality": rating_sleep_quality,
+                            "rating_location": rating_location,
+                            "rating_cleanliness": rating_cleanliness,
+                            "rating_service": rating_service,
+                            "wordnet_score": wordnet_hotel,
+                            "vader_neg_score": vader_neg_hotel,
+                            "vader_pos_score": vader_pos_hotel,
+                            "vader_neu_score": vader_neu_hotel,
+                            "vader_compound_score": vader_compound_hotel,
+                            "cluster": 0,
+                            "error_rate ": 0,
+                            "created_at": datenow
+                        }
+
+                    data_temp = copy.deepcopy(data)
+                    data_temp['month'] = month
+                    data_temp['year'] = year
+
+                    self.store_temporaldata(
+                        data_temp, sentiment_review, hotel, year, month)
+
+                    if month == datenow.month and year == datenow.year:
+                        print("Break")
+                        break
+
+                now_value_month = 1
+                if year == next_value_year:
+                    print("Break year")
+                    break
+
+            i += 1
+
+    def store_temporaldata(self, data_temp, sentiment_review, hotel, year, month):
+        hotel_bydate = self.temporaldata_service.get_by_hotel_date(
+            hotel['location_id'], year, month)
+
+        if hotel_bydate == None:
+            print("[", self.now, "]---> ", self.count, ".) Hotel ", hotel['name'], " : ",
+                  sentiment_review['_id']['month'], "-", sentiment_review['_id']['year'])
+            self.temporaldata_service.create(data_temp)
+        else:
+            print(
+                "[", self.now, "]---> Data temporal hotel is already exist !")
+            self.temporaldata_service.update_byid(
+                hotel_bydate['_id'], data_temp)
 
 
 if __name__ == "__main__":
