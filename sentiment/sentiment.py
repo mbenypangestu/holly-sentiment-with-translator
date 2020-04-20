@@ -69,66 +69,70 @@ class SentimentAnalyzer:
     def get_vader(self, text):
         return self.sentimentAnalyzer.polarity_scores(text)
 
-    def get_sentiwordnet(self, text):
-        pos_temp = 0
-        neg_temp = 0
-        obj_temp = 0
+    def get_wordnet_degree(self, word):
+        pos_tag = self.get_wordnet_pos_tag(word[1][0])
+        # print(word[0], "  ", word[1][0], "  ", pos_tag)
 
+        lemmatized = self.lemmatize_text(word[0], pos_tag)
+        synset = swn.senti_synset('{0}.{1}.03'.format(lemmatized, pos_tag))
+
+        return {
+            'positive': synset.pos_score(),
+            'negative': synset.neg_score(),
+            'objective': synset.obj_score()
+        }
+
+    def get_wordnet_aggregation(self, pos, neg, obj):
+        pos_wordnet = 0
+        neg_wordnet = 0
         result = 0
+
+        if pos > neg:
+            pos_wordnet = pos / (pos + neg)
+            result = pos_wordnet - (obj * pos_wordnet)
+        elif pos < neg:
+            neg_wordnet = neg / (pos + neg) * -1
+            result = neg_wordnet - (obj * neg_wordnet)
+        else:
+            result = 0
+
+        return result
+
+    def get_sentiwordnet(self, text):
+        sentences_result = 0
         total = 0
 
         text_preprocessed = self.preprocess_text(text)
 
+        word_count = 0
         for word in text_preprocessed:
             if word[0] not in self.stop_words:
-                pos_tag = self.get_wordnet_pos_tag(word[1][0])
-                print(
-                    "\n======================== Data lemmatized =========================")
-                print(word[0], "  ", word[1][0], "  ", pos_tag)
-                lemmatized = self.lemmatize_text(word[0], pos_tag)
-
                 try:
-                    synset = swn.senti_synset(
-                        '{0}.{1}.03'.format(lemmatized, pos_tag))
+                    degree = self.get_wordnet_degree(word)
+                    result = self.get_wordnet_aggregation(
+                        degree['positive'], degree['negative'], degree['objective'])
+                    # print("Result = ", result)
+
+                    if result != None:
+                        word_count += 1
+
+                    sentences_result += result
                 except:
                     continue
 
-                print("Pos : ", synset.pos_score())
-                print("Neg : ", synset.neg_score())
-                print("Obj : ", synset.obj_score())
+        print("Word count : ", word_count)
+        sentences_result = sentences_result / word_count
 
-                pos_temp += synset.pos_score()
-                neg_temp += synset.neg_score()
-                obj_temp += synset.obj_score()
-
-        print("\n Result : ")
-        print(pos_temp, " - ", neg_temp, " - ", obj_temp)
-        print(" Pos - Neg = ", pos_temp - neg_temp)
-
-        pos_wordnet = 0
-        neg_wordnet = 0
-
-        total_wordnet = pos_temp + neg_temp + obj_temp
-
-        if total_wordnet != 0:
-            pos_wordnet = (pos_temp + obj_temp) / total_wordnet
-            neg_wordnet = (neg_temp + obj_temp) / total_wordnet
-
-        result = (pos_wordnet + neg_wordnet) * 0.5 / 2
-
-        print("Total Pos : ", pos_wordnet)
-        print("Total Neg : ", neg_wordnet)
-        print(result)
-
+        print("Sentences result = ", sentences_result)
         return result
 
 
 if __name__ == "__main__":
     sentimentAnalyzer = SentimentAnalyzer()
     # Good
-    # score = sentimentAnalyzer.get_sentiwordnet(
-    #     "Great Hampton Inn.  Great Location.  Great People.  Good breakfast.  Clean and comfortable .   Easy to get to from the airports.  Has not shown any wear from the time built. The room was comfortable and clean")
+    score = sentimentAnalyzer.get_sentiwordnet(
+        "Great Hampton Inn.  Great Location.  Great People.  Good breakfast.  Clean and comfortable .   Easy to get to from the airports.  Has not shown any wear from the time built. The room was comfortable and clean")
 
     # Bad
-    score = sentimentAnalyzer.get_sentiwordnet(
-        "I booked this hotel tonight (april 11,2019) under my company reservation for two nights. Once, I arrived your front office staff said no reservation for us (Andi and Ega). They said that no room at all. Your marketing for my company (KPPU) said the same 'No'. They do nothing, do not make an effort for double check. I said that your hotel staff had confirm to Ms.Xenia this noon, but they still refusing us So, we force to search another hotel at 18.38 tonight. What a bad reservation system you had. It is so impossible for me do check in at the hotel without the reservation. And I have no word of apologize at all from your hotel staff Bad.. Very bad indeed.")
+    # score = sentimentAnalyzer.get_sentiwordnet(
+    #     "I booked this hotel tonight (april 11,2019) under my company reservation for two nights. Once, I arrived your front office staff said no reservation for us (Andi and Ega). They said that no room at all. Your marketing for my company (KPPU) said the same 'No'. They do nothing, do not make an effort for double check. I said that your hotel staff had confirm to Ms.Xenia this noon, but they still refusing us So, we force to search another hotel at 18.38 tonight. What a bad reservation system you had. It is so impossible for me do check in at the hotel without the reservation. And I have no word of apologize at all from your hotel staff Bad.. Very bad indeed.")
