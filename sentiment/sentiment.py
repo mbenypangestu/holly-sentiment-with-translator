@@ -69,7 +69,7 @@ class SentimentAnalyzer:
 
     def get_wordnet_degree(self, word):
         pos_tag = self.get_wordnet_pos_tag(word[1][0])
-        # print(word[0], "  ", word[1][0], "  ", pos_tag)
+        print(word[0], "  ", word[1][0], "  ", pos_tag)
 
         lemmatized = self.lemmatize_text(word[0], pos_tag)
         synset = swn.senti_synset('{0}.{1}.03'.format(lemmatized, pos_tag))
@@ -109,7 +109,7 @@ class SentimentAnalyzer:
                     degree = self.get_wordnet_degree(word)
                     result = self.get_wordnet_aggregation(
                         degree['positive'], degree['negative'], degree['objective'])
-                    # print("Result = ", result)
+                    print("Result = ", result)
 
                     if result != None:
                         word_count += 1
@@ -132,5 +132,9 @@ if __name__ == "__main__":
     #     "Great Hampton Inn.  Great Location.  Great People.  Good breakfast.  Clean and comfortable .   Easy to get to from the airports.  Has not shown any wear from the time built. The room was comfortable and clean")
 
     # Bad
+    # score = sentimentAnalyzer.get_sentiwordnet(
+    #     "I booked this hotel tonight (april 11,2019) under my company reservation for two nights. Once, I arrived your front office staff said no reservation for us (Andi and Ega). They said that no room at all. Your marketing for my company (KPPU) said the same 'No'. They do nothing, do not make an effort for double check. I said that your hotel staff had confirm to Ms.Xenia this noon, but they still refusing us So, we force to search another hotel at 18.38 tonight. What a bad reservation system you had. It is so impossible for me do check in at the hotel without the reservation. And I have no word of apologize at all from your hotel staff Bad.. Very bad indeed.")
+
+    # Check
     score = sentimentAnalyzer.get_sentiwordnet(
-        "I booked this hotel tonight (april 11,2019) under my company reservation for two nights. Once, I arrived your front office staff said no reservation for us (Andi and Ega). They said that no room at all. Your marketing for my company (KPPU) said the same 'No'. They do nothing, do not make an effort for double check. I said that your hotel staff had confirm to Ms.Xenia this noon, but they still refusing us So, we force to search another hotel at 18.38 tonight. What a bad reservation system you had. It is so impossible for me do check in at the hotel without the reservation. And I have no word of apologize at all from your hotel staff Bad.. Very bad indeed.")
+        "In the end i think the biggest issue with Cupadak Paradiso is the price. The location is beautiful but when you ask $150USD per night in South East Asia people’s expectations are relatively high. Unfortunately in this instance ours weren’t met. No airconditioning might be an issue for some for that money but was actually fine for us, a fan more than sufficed, but in 2019 to still be charging for wifi felt cheap, surely you just integrate the cost into your room rate calculation. The lodge itself is creaking after 25 years and in need of a bit of refurbishment. The food was ok but to have set times for group meals is quite rigid, although for sure easier for their kitchen. Couple of disclaimers at this point, we did make two mistakes during our stay, firstly asking if it was possible to have some Indonesian food on the daily menu, secondly leaving some empty cans outside one of our rooms. Both of these events then became issues that the owner Dominique felt the need to highlight to the whole group at every subsequent mealtime, either telling everyone that we’d been naive in leaving the cans and she’d had to fight off the monkeys in the morning or apologising to everyone for the local food being served but it had been specially requested. This became uncomfortable, as much as we liked the idea of shared mealtimes it only works when guests feel comfortable in the management’s company. Knowing that we were going to be regularly lambasted for our errors wasn’t enjoyable. Just a last point but the staff seemed to be very relaxed, lounging in the library, restaurant or bar. It wasn’t really clear what they were up to but could be an idea to have a staff room dedicated for them as a slightly seperate area from guests. It is a beautiful spot and great place to relax and watch the world go by but could have been so much more...")

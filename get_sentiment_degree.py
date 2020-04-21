@@ -46,8 +46,10 @@ class Main(MongoService):
                 sentimentreviews_on_hotel = sentimentreview_service.get_review_by_hotel_locid(
                     hotel['location_id'])
 
-                if reviews_translated == None:
-                    print("Ada translated")
+                print(reviews_translated.count())
+
+                if reviews_translated.count() > 0:
+                    print("[", datetime.now(), "] Data translated")
                     for r, review_translated in enumerate(reviews_translated):
                         text_to_sentiment = review_translated['text_translated']
 
@@ -61,7 +63,7 @@ class Main(MongoService):
                                     text_to_sentiment)
 
                                 subratings = self.map_subratings(
-                                    review_translated)
+                                    review_translated['review'])
                                 subratings_normalized = self.normalize_subratings(
                                     subratings)
 
@@ -82,6 +84,7 @@ class Main(MongoService):
                                     "text_to_sentiment": text_to_sentiment,
                                     "vader_sentiment": vader,
                                     "wordnet_sentiment": wordnet,
+                                    "wordnet_normalized": (wordnet - (-1)) / 2,
                                     "created_at": datenow
                                 }
                                 # pprint.pprint(data)
@@ -89,13 +92,13 @@ class Main(MongoService):
                                 sentimentreview_service.create(data)
                             else:
                                 print("[", datetime.now(), "] Review (",
-                                      review_translated['review_id'], ") on table Translated Review is already exist")
+                                      review_translated['review_id'], ") on table Sentiment Review is already exist")
 
                         except Exception as err:
                             print(str("[", datetime.now(), "]  Err : ", err))
                             continue
                 else:
-                    print("[", datetime.now(), "] Tidak ada translate")
+                    print("[", datetime.now(), "] No translated data")
                     reviews = review_service.get_review_by_hotel_locationid(
                         hotel['location_id'])
 
@@ -130,9 +133,10 @@ class Main(MongoService):
                                         'neg': 0,
                                         'pos': 0,
                                         'neu': 0,
-                                        'compound': 0
+                                        'compound': 0.5
                                     },
                                     "wordnet_sentiment": 0,
+                                    "wordnet_normalized": 0.5,
                                     "created_at": datenow
                                 }
                                 # pprint.pprint(data)
@@ -140,18 +144,21 @@ class Main(MongoService):
                                 sentimentreview_service.create(data)
                             else:
                                 print("[", datetime.now(), "] Review (",
-                                      review['id'], ") on table sentiment Review is already exist")
+                                      review['id'], ") on table Sentiment Review is already exist")
 
                         except Exception as err:
                             print(str("[", datetime.now(), "] Err : ", err))
                             continue
+            #     break
+            # break
 
-                # solrService = SolrService()
-                # count = solrService.getCollection("test_review", "test")
-                # print("Count : ", count)
+            # solrService = SolrService()
+            # count = solrService.getCollection("test_review", "test")
+            # print("Count : ", count)
 
     def map_subratings(self, review_translated):
         subratings = review_translated['subratings']
+
         mapped_subratings = {
             'rooms': 0,
             'value': 0,

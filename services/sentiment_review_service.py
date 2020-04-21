@@ -64,7 +64,8 @@ class SentimentReviewService(MongoService):
         try:
             result = (self.db.sentiment_review.insert_one(
                 sentiment_review)).inserted_id
-            print("Msg: Success saving data with id ",
+            print("[", datetime.now(), "] Msg: Success saving data with id ",
                   result, "to sentiment review !")
         except:
-            print("Err: Failed to save result sentiment review !")
+            print(
+                "[", datetime.now(), "] Err: Failed to save result sentiment review !")
