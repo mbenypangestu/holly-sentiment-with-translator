@@ -17,6 +17,10 @@ class HotelService(MongoService):
         hotels = self.db.hotel.find()
         return hotels
 
+    def get_by_hotellocationid(self, location_id):
+        hotel = self.db.hotel.find_one({'location_id': location_id})
+        return hotel
+
     def get_hotels_by_locationid(self, location_id):
         hotels = self.db.hotel.find({'locationID': location_id})
         return hotels

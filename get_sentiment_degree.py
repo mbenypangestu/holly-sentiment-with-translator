@@ -18,7 +18,7 @@ import pprint
 from googletrans import Translator
 
 
-class Main(MongoService):
+class SentimentAggregation(MongoService):
     def __init__(self):
         super().__init__()
         self.start()
@@ -235,5 +235,5 @@ class Main(MongoService):
 
 
 if __name__ == "__main__":
-    Main()
+    SentimentAggregation()
     # time.sleep(10000)

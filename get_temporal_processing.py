@@ -19,24 +19,27 @@ from googletrans import Translator
 import copy
 
 
-class Main(MongoService):
+class TemporalProcessing(MongoService):
     now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
 
     def __init__(self):
         super().__init__()
         self.temporaldata_service = TemporalDataService()
         self.sentimentreview_service = SentimentReviewService()
+        self.hotel_service = HotelService()
         self.count = 1
-        self.start()
+        # self.start()
+
+        test_hotel = self.hotel_service.get_by_hotellocationid("582990")
+        self.calculate_sentiment_score(test_hotel)
 
     def start(self):
         location_service = LocationService()
-        hotel_service = HotelService()
 
         locations = location_service.get_locations_indonesia()
 
         for i, location in enumerate(locations):
-            hotels = hotel_service.get_hotels_by_locationid(
+            hotels = self.hotel_service.get_hotels_by_locationid(
                 location['location_id'])
 
             for j, hotel in enumerate(hotels):
@@ -44,6 +47,8 @@ class Main(MongoService):
                       hotel['name'])
                 self.calculate_sentiment_score(hotel)
                 self.count += 1
+            #     break
+            # break
 
     def calculate_sentiment_score(self, hotel):
         datenow = datetime.now()
@@ -75,14 +80,14 @@ class Main(MongoService):
                 rating_location += subrating['location']
                 rating_cleanliness += subrating['cleanliness']
                 rating_service += subrating['service']
-        
+
             for v, vader in enumerate(sentiment_review['vader_sentiment']):
                 vader_neg_hotel += vader['neg']
                 vader_pos_hotel += vader['pos']
                 vader_neu_hotel += vader['neu']
                 vader_compound_hotel += vader['compound']
 
-            for w, wordnet in enumerate(sentiment_review['wordnet_sentiment']):
+            for w, wordnet in enumerate(sentiment_review['wordnet_normalized']):
                 wordnet_hotel += wordnet
 
             rating_rooms /= len(
@@ -104,7 +109,7 @@ class Main(MongoService):
             vader_compound_hotel /= len(
                 sentiment_review['vader_sentiment'])
 
-            wordnet_hotel /= len(sentiment_review['wordnet_sentiment'])
+            wordnet_hotel /= len(sentiment_review['wordnet_normalized'])
 
             print("\nITERASI ", i, "\n")
 
@@ -186,5 +191,5 @@ class Main(MongoService):
 
 
 if __name__ == "__main__":
-    Main()
+    TemporalProcessing()
     # time.sleep(10000)
