@@ -11,7 +11,7 @@ from sentiment.sentiment import SentimentAnalyzer
 from mongoengine import connect
 from pymongo import MongoClient
 import time
-import datetime
+from datetime import datetime
 import dateutil
 import json
 import pprint
@@ -24,7 +24,7 @@ class Main(MongoService):
         self.start()
 
     def start(self):
-        datenow = datetime.datetime.now()
+        datenow = datetime.now()
 
         sentimentreview_service = SentimentReviewService()
         sentiment_analyzer = SentimentAnalyzer()
@@ -88,14 +88,14 @@ class Main(MongoService):
 
                                 sentimentreview_service.create(data)
                             else:
-                                print("---> Review (",
+                                print("[", datetime.now(), "] Review (",
                                       review_translated['review_id'], ") on table Translated Review is already exist")
 
                         except Exception as err:
-                            print(str("-----> Err : ", err))
+                            print(str("[", datetime.now(), "]  Err : ", err))
                             continue
                 else:
-                    print("Tidak ada translate")
+                    print("[", datetime.now(), "] Tidak ada translate")
                     reviews = review_service.get_review_by_hotel_locationid(
                         hotel['location_id'])
 
@@ -127,10 +127,10 @@ class Main(MongoService):
                                     "subratings_normalized": subratings_normalized,
                                     "text_to_sentiment": "",
                                     "vader_sentiment": {
-                                        'neg' : 0,
-                                        'pos' : 0,
-                                        'neu' : 0,
-                                        'compound' : 0
+                                        'neg': 0,
+                                        'pos': 0,
+                                        'neu': 0,
+                                        'compound': 0
                                     },
                                     "wordnet_sentiment": 0,
                                     "created_at": datenow
@@ -139,11 +139,11 @@ class Main(MongoService):
 
                                 sentimentreview_service.create(data)
                             else:
-                                print("---> Review (",
+                                print("[", datetime.now(), "] Review (",
                                       review['id'], ") on table sentiment Review is already exist")
 
                         except Exception as err:
-                            print(str("-----> Err : ", err))
+                            print(str("[", datetime.now(), "] Err : ", err))
                             continue
 
                 # solrService = SolrService()

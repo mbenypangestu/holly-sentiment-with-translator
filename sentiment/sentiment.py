@@ -7,6 +7,7 @@ from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import nltk
 import pandas as pd
 import re
+from datetime import datetime
 
 nltk.download('vader_lexicon')
 nltk.download('stopwords')
@@ -34,21 +35,18 @@ class SentimentAnalyzer:
         return result
 
     def specialchar_filtering_text(self, text):
-        print("\n======================== Special Char Filtering =========================")
+        # print("\n======================== Special Char Filtering =========================")
         result = " ".join(re.findall("[a-zA-Z]+", text))
-        print(result)
         return result
 
     def to_lowercase_text(self, text):
-        print("\n======================== Data case folding =========================")
+        # print("\n======================== Data case folding =========================")
         result = text.lower()
-        print(result)
         return result
 
     def tokenize_text(self, text):
-        print("\n======================== Data tokenized =========================")
+        print("[", datetime.now(), "] Tokenizing data....")
         result = nltk.pos_tag(word_tokenize(text))
-        print(result)
         return result
 
     def lemmatize_text(self, text, pos_tag):
@@ -120,19 +118,19 @@ class SentimentAnalyzer:
                 except:
                     continue
 
-        print("Word count : ", word_count)
+        print("[", datetime.now(), "] Word count :", word_count)
         sentences_result = sentences_result / word_count
 
-        print("Sentences result = ", sentences_result)
+        print("[", datetime.now(), "] Sentences result :", sentences_result)
         return result
 
 
 if __name__ == "__main__":
     sentimentAnalyzer = SentimentAnalyzer()
     # Good
-    score = sentimentAnalyzer.get_sentiwordnet(
-        "Great Hampton Inn.  Great Location.  Great People.  Good breakfast.  Clean and comfortable .   Easy to get to from the airports.  Has not shown any wear from the time built. The room was comfortable and clean")
+    # score = sentimentAnalyzer.get_sentiwordnet(
+    #     "Great Hampton Inn.  Great Location.  Great People.  Good breakfast.  Clean and comfortable .   Easy to get to from the airports.  Has not shown any wear from the time built. The room was comfortable and clean")
 
     # Bad
-    # score = sentimentAnalyzer.get_sentiwordnet(
-    #     "I booked this hotel tonight (april 11,2019) under my company reservation for two nights. Once, I arrived your front office staff said no reservation for us (Andi and Ega). They said that no room at all. Your marketing for my company (KPPU) said the same 'No'. They do nothing, do not make an effort for double check. I said that your hotel staff had confirm to Ms.Xenia this noon, but they still refusing us So, we force to search another hotel at 18.38 tonight. What a bad reservation system you had. It is so impossible for me do check in at the hotel without the reservation. And I have no word of apologize at all from your hotel staff Bad.. Very bad indeed.")
+    score = sentimentAnalyzer.get_sentiwordnet(
+        "I booked this hotel tonight (april 11,2019) under my company reservation for two nights. Once, I arrived your front office staff said no reservation for us (Andi and Ega). They said that no room at all. Your marketing for my company (KPPU) said the same 'No'. They do nothing, do not make an effort for double check. I said that your hotel staff had confirm to Ms.Xenia this noon, but they still refusing us So, we force to search another hotel at 18.38 tonight. What a bad reservation system you had. It is so impossible for me do check in at the hotel without the reservation. And I have no word of apologize at all from your hotel staff Bad.. Very bad indeed.")
