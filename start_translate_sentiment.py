@@ -44,44 +44,57 @@ class SentimentAggregation(MongoService):
                 location['location_id'])
 
             for j, hotel in enumerate(hotels):
-                reviews_translated = reviewtranslated_service.get_review_by_hotel_locid(
-                    hotel['location_id'])
                 sentimentreviews_on_hotel = sentimentreview_service.get_review_by_hotel_locid(
                     hotel['location_id'])
 
-                print(reviews_translated.count())
+                reviews = review_service.get_review_by_hotel_locationid(
+                    hotel['location_id'])
 
-                if reviews_translated.count() > 0:
-                    print("[", datetime.now(), "] Data translated")
-                    for r, review_translated in enumerate(reviews_translated):
-                        text_to_sentiment = review_translated['text_translated']
+                print(reviews.count())
 
+                if reviews.count() > 0:
+                    print(
+                        "[", datetime.now(), "] Data reviews on this hotel is available.....")
+                    for r, review in enumerate(reviews):
                         try:
-                            isexist_review = any(x['review_id'] == review_translated['review_id']
+                            isexist_review = any(x['review_id'] == review['id']
                                                  for x in sentimentreviews_on_hotel)
                             if not isexist_review:
+                                print("\n[", datetime.now(),
+                                      "] Next review .....")
+
+                                text_translated = review['text']
+                                if review['lang'] != "en":
+                                    text_translated = language_translator.translate_yandex(
+                                        review['text'])
+                                    print("[", datetime.now(), "] Review :",
+                                          review['text'])
+                                    print(
+                                        "[", datetime.now(), "] Review translated :", text_translated)
+
+                                text_to_sentiment = text_translated
+
                                 vader = sentiment_analyzer.get_vader(
                                     text_to_sentiment)
                                 wordnet = sentiment_analyzer.get_sentiwordnet(
                                     text_to_sentiment)
 
                                 subratings = self.map_subratings(
-                                    review_translated['review'])
+                                    review)
                                 subratings_normalized = self.normalize_subratings(
                                     subratings)
 
                                 date_publish = dateutil.parser.parse(
-                                    review_translated['review']['published_date'])
+                                    review['published_date'])
 
                                 data = {
                                     "hotel": hotel,
-                                    "review_translated": review_translated,
-                                    "publish_date": review_translated['review']['published_date'],
+                                    "publish_date": review['published_date'],
                                     "month": date_publish.month,
                                     "year": date_publish.year,
                                     "location_id": location['location_id'],
                                     "hotel_id": hotel['location_id'],
-                                    "review_id": review_translated['review_id'],
+                                    "review_id": review['id'],
                                     "subratings": subratings,
                                     "subratings_normalized": subratings_normalized,
                                     "text_to_sentiment": text_to_sentiment,
@@ -95,69 +108,15 @@ class SentimentAggregation(MongoService):
                                 sentimentreview_service.create(data)
                             else:
                                 print("[", datetime.now(), "] Review (",
-                                      review_translated['review_id'], ") on table Sentiment Review is already exist")
+                                      review['id'], ") on table Sentiment Review is already exist")
 
                         except Exception as err:
                             print(str("[", datetime.now(), "]  Err : ", err))
                             continue
-                else:
-                    print("[", datetime.now(), "] No translated data")
-                    reviews = review_service.get_review_by_hotel_locationid(
-                        hotel['location_id'])
-
-                    for r, review in enumerate(reviews):
-
-                        try:
-                            isexist_review = any(x['review_id'] == review['id']
-                                                 for x in sentimentreviews_on_hotel)
-
-                            if not isexist_review:
-                                subratings = self.map_subratings(
-                                    review)
-                                subratings_normalized = self.normalize_subratings(
-                                    subratings)
-
-                                date_publish = dateutil.parser.parse(
-                                    review['published_date'])
-
-                                data = {
-                                    "hotel": hotel,
-                                    "review": review,
-                                    "publish_date": review['published_date'],
-                                    "month": date_publish.month,
-                                    "year": date_publish.year,
-                                    "location_id": location['location_id'],
-                                    "hotel_id": hotel['location_id'],
-                                    "review_id": review['id'],
-                                    "subratings": subratings,
-                                    "subratings_normalized": subratings_normalized,
-                                    "text_to_sentiment": "",
-                                    "vader_sentiment": {
-                                        'neg': 0,
-                                        'pos': 0,
-                                        'neu': 0,
-                                        'compound': 0.5
-                                    },
-                                    "wordnet_sentiment": 0,
-                                    "wordnet_normalized": 0.5,
-                                    "created_at": datenow
-                                }
-                                # pprint.pprint(data)
-
-                                sentimentreview_service.create(data)
-                            else:
-                                print("[", datetime.now(), "] Review (",
-                                      review['id'], ") on table Sentiment Review is already exist")
-
-                        except Exception as err:
-                            print(str("[", datetime.now(), "] Err : ", err))
-                            continue
-            #     break
-            # break
-
-            # solrService = SolrService()
-            # count = solrService.getCollection("test_review", "test")
-            # print("Count : ", count)
+                # Break Hotel
+                # break
+            # Break location
+            break
 
     def translate(self, text_to_translate):
         text_translated = self.translate_yandex(

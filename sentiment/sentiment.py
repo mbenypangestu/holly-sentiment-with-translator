@@ -69,7 +69,7 @@ class SentimentAnalyzer:
 
     def get_wordnet_degree(self, word):
         pos_tag = self.get_wordnet_pos_tag(word[1][0])
-        print(word[0], "  ", word[1][0], "  ", pos_tag)
+        # print(word[0], "  ", word[1][0], "  ", pos_tag)
 
         lemmatized = self.lemmatize_text(word[0], pos_tag)
         synset = swn.senti_synset('{0}.{1}.03'.format(lemmatized, pos_tag))
@@ -109,7 +109,7 @@ class SentimentAnalyzer:
                     degree = self.get_wordnet_degree(word)
                     result = self.get_wordnet_aggregation(
                         degree['positive'], degree['negative'], degree['objective'])
-                    print("Result = ", result)
+                    # print("Result = ", result)
 
                     if result != None:
                         word_count += 1
