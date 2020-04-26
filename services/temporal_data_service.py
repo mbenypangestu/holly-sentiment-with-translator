@@ -42,12 +42,12 @@ class TemporalDataService(MongoService):
     def create(self, temporal_data):
         try:
             result = self.db.temporal_data.insert_one(temporal_data)
-            print("[", self.now, "]---> Msg: Success saving data temporal_data hotel !")
+            print("[", self.now, "] Msg: Success saving data temporal_data hotel !")
         except Exception as err:
             print(
-                "[", self.now, "]---> Err: Failed to save result temporal_data hotel !")
+                "[", self.now, "] Err: Failed to save result temporal_data hotel !")
             print(
-                "[", self.now, "]--->", err)
+                "[", self.now, "]", err)
 
     def update_byid(self, id_temporal_data, data_update):
         try:
@@ -56,9 +56,9 @@ class TemporalDataService(MongoService):
             }, {
                 "$set": data_update
             })
-            print("[", self.now, "]---> Msg: Success updating temporal_data hotel !")
+            print("[", self.now, "] Msg: Success updating temporal_data hotel !")
         except Exception as err:
             print(
-                "[", self.now, "]---> Err: Failed to update result temporal_data hotel !")
+                "[", self.now, "] Err: Failed to update result temporal_data hotel !")
             print(
-                "[", self.now, "]--->", err)
+                "[", self.now, "]", err)
