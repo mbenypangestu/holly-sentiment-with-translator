@@ -142,7 +142,7 @@ class TemporalProcessing(MongoService):
                             "month": month,
                             "year": year,
                             "location_id": sentiment_review['location_id'][0],
-                            # "hotel": hotel,
+                            "hotel": hotel,
                             "rating_rooms": rating_rooms,
                             "rating_value": rating_value,
                             "rating_sleep_quality": rating_sleep_quality,
