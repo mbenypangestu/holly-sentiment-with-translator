@@ -116,7 +116,7 @@ class SentimentAggregation(MongoService):
                 # Break Hotel
                 # break
             # Break location
-            break
+            # break
 
     def translate(self, text_to_translate):
         text_translated = self.translate_yandex(

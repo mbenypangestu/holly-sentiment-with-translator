@@ -46,7 +46,7 @@ class TemporalProcessing(MongoService):
                 self.count += 1
 
             #     break
-            break
+            # break
 
     def calculate_sentiment_score(self, hotel):
         datenow = datetime.now()

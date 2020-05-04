@@ -31,6 +31,7 @@ class TemporalProcessing(MongoService):
         # self.start()
 
         test_hotel = self.hotel_service.get_by_hotellocationid("582990")
+        # test_hotel = self.hotel_service.get_by_hotellocationid("5308148")
         self.calculate_sentiment_score(test_hotel)
 
     def start(self):
