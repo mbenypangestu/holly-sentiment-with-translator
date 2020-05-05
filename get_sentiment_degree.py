@@ -84,6 +84,7 @@ class SentimentAggregation(MongoService):
                                     "review_id": review_translated['review_id'],
                                     "subratings": subratings,
                                     "subratings_normalized": subratings_normalized,
+                                    "text_review": review['text'],
                                     "text_to_sentiment": text_to_sentiment,
                                     "vader_sentiment": vader,
                                     "wordnet_sentiment": wordnet,
