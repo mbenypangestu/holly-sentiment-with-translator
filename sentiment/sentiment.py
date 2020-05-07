@@ -119,7 +119,10 @@ class SentimentAnalyzer:
                     continue
 
         print("[", datetime.now(), "] Word count :", word_count)
-        sentences_result = sentences_result / word_count
+        if word_count > 0:
+            sentences_result = sentences_result / word_count
+        else :
+            sentences_result = 0
 
         print("[", datetime.now(), "] Sentences result :", sentences_result)
         return result
