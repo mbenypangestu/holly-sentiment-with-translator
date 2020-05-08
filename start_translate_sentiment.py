@@ -112,7 +112,7 @@ class SentimentAggregation(MongoService):
                                       review['id'], ") on table Sentiment Review is already exist")
 
                         except Exception as err:
-                            print(str("[", datetime.now(), "]  Err : ", err))
+                            print("[", datetime.now(), "]  Err : ", err)
                             continue
                 # Break Hotel
                 # break
