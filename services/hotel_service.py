@@ -18,11 +18,13 @@ class HotelService(MongoService):
         return hotels
 
     def get_by_hotellocationid(self, location_id):
-        hotel = self.db.hotel.find_one({'location_id': location_id})
+        hotel = self.db.hotel.find_one(
+            {'location_id': location_id}, no_cursor_timeout=True)
         return hotel
 
     def get_hotels_by_locationid(self, location_id):
-        hotels = self.db.hotel.find({'locationID': location_id})
+        hotels = self.db.hotel.find(
+            {'locationID': location_id}, no_cursor_timeout=True)
         return hotels
 
     def is_hotel_exist(self, hotel_id):

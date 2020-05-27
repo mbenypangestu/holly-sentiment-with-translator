@@ -53,5 +53,5 @@ class LocationService(MongoService):
                 'Malang',
                 'Sidoarjo'
             ]}
-        })
+        }, no_cursor_timeout=True)
         return locations
