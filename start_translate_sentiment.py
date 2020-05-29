@@ -53,7 +53,8 @@ class SentimentAggregation(MongoService):
                 print(reviews.count())
 
                 if reviews.count() > 0:
-                    print("[", datetime.now(), "] Data reviews on this hotel is available.....")
+                    print(
+                        "[", datetime.now(), "] Data reviews on this hotel is available.....")
                     for r, review in enumerate(reviews):
                         try:
                             isexist_review = any(x['review_id'] == review['id']
@@ -113,8 +114,13 @@ class SentimentAggregation(MongoService):
                         except Exception as err:
                             print("[", datetime.now(), "]  Err : ", err)
                             continue
+                    reviews.close()
+
+                hotels.close()
                 # Break Hotel
                 # break
+
+            locations.close()
             # Break location
             # break
 
