@@ -114,15 +114,15 @@ class SentimentAggregation(MongoService):
                         except Exception as err:
                             print("[", datetime.now(), "]  Err : ", err)
                             continue
-                    reviews.close()
+                    # reviews.close()
                 else:
                     print(
                         "[", datetime.now(), "] This hotel's review is empty ...")
 
-                hotels.close()
+                # hotels.close()
                 # Break Hotel
                 # break
-            locations.close()
+            # locations.close()
             # Break location
             # break
 
