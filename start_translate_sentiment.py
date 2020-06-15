@@ -47,84 +47,89 @@ class SentimentAggregation(MongoService):
                 sentimentreviews_on_hotel = sentimentreview_service.get_review_by_hotel_locid(
                     hotel['location_id'])
 
-                reviews = review_service.get_review_by_hotel_locationid(
-                    hotel['location_id'])
+                with self.client.start_session() as session:
+                    reviews = review_service.get_review_by_hotel_locationid(
+                        hotel['location_id'], None)
+                    print(reviews.count())
 
-                print(reviews.count())
+                    if reviews.count() > 0:
+                        print(
+                            "[", datetime.now(), "] Data reviews on this hotel is available ...")
+                        for r, review in enumerate(self.db.review.find(
+                                {'location_id': hotel['location_id']}, no_cursor_timeout=True, session=session)):
+                            try:
+                                isexist_review = any(x['review_id'] == review['id']
+                                                     for x in sentimentreviews_on_hotel)
+                                if not isexist_review:
+                                    print("\n[", datetime.now(),
+                                          "] Next review .....")
 
-                if reviews.count() > 0:
-                    print(
-                        "[", datetime.now(), "] Data reviews on this hotel is available ...")
-                    for r, review in enumerate(reviews):
-                        try:
-                            isexist_review = any(x['review_id'] == review['id']
-                                                 for x in sentimentreviews_on_hotel)
-                            if not isexist_review:
-                                print("\n[", datetime.now(),
-                                      "] Next review .....")
+                                    text_translated = review['text']
+                                    if review['lang'] != "en":
+                                        text_translated = language_translator.translate_yandex(
+                                            review['text'])
+                                        print("[", datetime.now(), "] Review :",
+                                              review['text'])
+                                        print(
+                                            "[", datetime.now(), "] Review translated :", text_translated)
 
-                                text_translated = review['text']
-                                if review['lang'] != "en":
-                                    text_translated = language_translator.translate_yandex(
-                                        review['text'])
-                                    print("[", datetime.now(), "] Review :",
-                                          review['text'])
-                                    print(
-                                        "[", datetime.now(), "] Review translated :", text_translated)
+                                    text_to_sentiment = text_translated
 
-                                text_to_sentiment = text_translated
+                                    vader = sentiment_analyzer.get_vader(
+                                        text_to_sentiment)
+                                    wordnet = sentiment_analyzer.get_sentiwordnet(
+                                        text_to_sentiment)
 
-                                vader = sentiment_analyzer.get_vader(
-                                    text_to_sentiment)
-                                wordnet = sentiment_analyzer.get_sentiwordnet(
-                                    text_to_sentiment)
+                                    subratings = self.map_subratings(
+                                        review)
+                                    subratings_normalized = self.normalize_subratings(
+                                        subratings)
 
-                                subratings = self.map_subratings(
-                                    review)
-                                subratings_normalized = self.normalize_subratings(
-                                    subratings)
+                                    date_publish = dateutil.parser.parse(
+                                        review['published_date'])
 
-                                date_publish = dateutil.parser.parse(
-                                    review['published_date'])
+                                    data = {
+                                        "hotel": hotel,
+                                        "publish_date": review['published_date'],
+                                        "month": date_publish.month,
+                                        "year": date_publish.year,
+                                        "location_id": location['location_id'],
+                                        "hotel_id": hotel['location_id'],
+                                        "review_id": review['id'],
+                                        "subratings": subratings,
+                                        "subratings_normalized": subratings_normalized,
+                                        "text_review": review['text'],
+                                        "text_to_sentiment": text_to_sentiment,
+                                        "vader_sentiment": vader,
+                                        "wordnet_sentiment": wordnet,
+                                        "wordnet_normalized": (wordnet - (-1)) / 2,
+                                        "created_at": datenow
+                                    }
+                                    # pprint.pprint(data)
 
-                                data = {
-                                    "hotel": hotel,
-                                    "publish_date": review['published_date'],
-                                    "month": date_publish.month,
-                                    "year": date_publish.year,
-                                    "location_id": location['location_id'],
-                                    "hotel_id": hotel['location_id'],
-                                    "review_id": review['id'],
-                                    "subratings": subratings,
-                                    "subratings_normalized": subratings_normalized,
-                                    "text_review": review['text'],
-                                    "text_to_sentiment": text_to_sentiment,
-                                    "vader_sentiment": vader,
-                                    "wordnet_sentiment": wordnet,
-                                    "wordnet_normalized": (wordnet - (-1)) / 2,
-                                    "created_at": datenow
-                                }
-                                # pprint.pprint(data)
+                                    sentimentreview_service.create(data)
+                                else:
+                                    print("[", datetime.now(), "] Review (",
+                                          review['id'], ") on table Sentiment Review is already exist")
 
-                                sentimentreview_service.create(data)
-                            else:
-                                print("[", datetime.now(), "] Review (",
-                                      review['id'], ") on table Sentiment Review is already exist")
+                            except Exception as err:
+                                print("[", datetime.now(), "]  Err : ", err)
+                                continue
 
-                        except Exception as err:
-                            print("[", datetime.now(), "]  Err : ", err)
-                            continue
-                    # reviews.close()
-                else:
-                    print(
-                        "[", datetime.now(), "] This hotel's review is empty ...")
+                            time.sleep(1)
+                            self.client.admin.command(
+                                'refreshSessions', [session.session_id], session=session)
+                        # reviews.close()
+                    else:
+                        print(
+                            "[", datetime.now(), "] This hotel's review is empty ...")
 
-                # hotels.close()
-                # Break Hotel
-                # break
-            # locations.close()
-            # Break location
-            # break
+        # hotels.close()
+        # Break Hotel
+        # break
+        # locations.close()
+        # Break location
+        # break
 
     def translate(self, text_to_translate):
         text_translated = self.translate_yandex(
