@@ -49,15 +49,17 @@ class SentimentAggregation(MongoService):
 
                 with self.client.start_session() as session:
                     reviews = review_service.get_review_by_hotel_locationid(
-                        hotel['location_id'], None)
+                        hotel['location_id'])
                     print(reviews.count())
 
                     if reviews.count() > 0:
                         print(
                             "[", datetime.now(), "] Data reviews on this hotel is available ...")
 
-                        if sentimentreviews_on_hotel.count() < reviews.count():
-
+                        if sentimentreviews_on_hotel.count() == reviews.count():
+                            print(
+                                "[", datetime.now(), "] Complete saving this hotel's review  ...")
+                        else:
                             for r, review in enumerate(self.db.review.find(
                                     {'location_id': hotel['location_id']}, no_cursor_timeout=True, session=session)):
                                 try:
@@ -124,9 +126,6 @@ class SentimentAggregation(MongoService):
                                 #     'refreshSessions', [session.session_id], session=session)
                             # reviews.close()
 
-                        else:
-                            print(
-                                "[", datetime.now(), "] Complete saving this hotel's review  ...")
                     else:
                         print(
                             "[", datetime.now(), "] This hotel's review is empty ...")
