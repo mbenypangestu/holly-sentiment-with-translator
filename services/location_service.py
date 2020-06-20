@@ -17,6 +17,23 @@ class LocationService(MongoService):
         locations = self.db.location.find()
         return locations
 
+    def get_spesific_loc_indonesia(self):
+        locations = self.db.location.find({
+            "name": {"$in": [
+                'Padang',
+                'Jayapura',
+                'Bandung',
+                'Jakarta',
+                'Surabaya',
+                'Yogyakarta',
+                'Denpasar',
+                'Samarinda',
+                'Makassar',
+                'Palembang',
+            ]}
+        }, no_cursor_timeout=True)
+        return locations
+
     def get_locations_indonesia(self):
         locations = self.db.location.find({
             "name": {"$in": [

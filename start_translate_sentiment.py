@@ -37,7 +37,7 @@ class SentimentAggregation(MongoService):
 
         language_translator = LanguageTranslator()
 
-        locations = location_service.get_locations_indonesia()
+        locations = location_service.get_spesific_loc_indonesia()
 
         for i, location in enumerate(locations):
             hotels = hotel_service.get_hotels_by_locationid(
@@ -55,71 +55,78 @@ class SentimentAggregation(MongoService):
                     if reviews.count() > 0:
                         print(
                             "[", datetime.now(), "] Data reviews on this hotel is available ...")
-                        for r, review in enumerate(self.db.review.find(
-                                {'location_id': hotel['location_id']}, no_cursor_timeout=True, session=session)):
-                            try:
-                                isexist_review = any(x['review_id'] == review['id']
-                                                     for x in sentimentreviews_on_hotel)
-                                if not isexist_review:
-                                    print("\n[", datetime.now(),
-                                          "] Next review .....")
 
-                                    text_translated = review['text']
-                                    if review['lang'] != "en":
-                                        text_translated = language_translator.translate_yandex(
-                                            review['text'])
-                                        print("[", datetime.now(), "] Review :",
-                                              review['text'])
-                                        print(
-                                            "[", datetime.now(), "] Review translated :", text_translated)
+                        if sentimentreviews_on_hotel.count() < reviews.count():
 
-                                    text_to_sentiment = text_translated
+                            for r, review in enumerate(self.db.review.find(
+                                    {'location_id': hotel['location_id']}, no_cursor_timeout=True, session=session)):
+                                try:
+                                    isexist_review = any(x['review_id'] == review['id']
+                                                         for x in sentimentreviews_on_hotel)
+                                    if not isexist_review:
+                                        print("\n[", datetime.now(),
+                                              "] Next review .....")
 
-                                    vader = sentiment_analyzer.get_vader(
-                                        text_to_sentiment)
-                                    wordnet = sentiment_analyzer.get_sentiwordnet(
-                                        text_to_sentiment)
+                                        text_translated = review['text']
+                                        if review['lang'] != "en":
+                                            text_translated = language_translator.translate_yandex(
+                                                review['text'])
+                                            print("[", datetime.now(), "] Review :",
+                                                  review['text'])
+                                            print(
+                                                "[", datetime.now(), "] Review translated :", text_translated)
 
-                                    subratings = self.map_subratings(
-                                        review)
-                                    subratings_normalized = self.normalize_subratings(
-                                        subratings)
+                                        text_to_sentiment = text_translated
 
-                                    date_publish = dateutil.parser.parse(
-                                        review['published_date'])
+                                        vader = sentiment_analyzer.get_vader(
+                                            text_to_sentiment)
+                                        wordnet = sentiment_analyzer.get_sentiwordnet(
+                                            text_to_sentiment)
 
-                                    data = {
-                                        "hotel": hotel,
-                                        "publish_date": review['published_date'],
-                                        "month": date_publish.month,
-                                        "year": date_publish.year,
-                                        "location_id": location['location_id'],
-                                        "hotel_id": hotel['location_id'],
-                                        "review_id": review['id'],
-                                        "subratings": subratings,
-                                        "subratings_normalized": subratings_normalized,
-                                        "text_review": review['text'],
-                                        "text_to_sentiment": text_to_sentiment,
-                                        "vader_sentiment": vader,
-                                        "wordnet_sentiment": wordnet,
-                                        "wordnet_normalized": (wordnet - (-1)) / 2,
-                                        "created_at": datenow
-                                    }
-                                    # pprint.pprint(data)
+                                        subratings = self.map_subratings(
+                                            review)
+                                        subratings_normalized = self.normalize_subratings(
+                                            subratings)
 
-                                    sentimentreview_service.create(data)
-                                else:
-                                    print("[", datetime.now(), "] Review (",
-                                          review['id'], ") on table Sentiment Review is already exist")
+                                        date_publish = dateutil.parser.parse(
+                                            review['published_date'])
 
-                            except Exception as err:
-                                print("[", datetime.now(), "]  Err : ", err)
-                                continue
+                                        data = {
+                                            "hotel": hotel,
+                                            "publish_date": review['published_date'],
+                                            "month": date_publish.month,
+                                            "year": date_publish.year,
+                                            "location_id": location['location_id'],
+                                            "hotel_id": hotel['location_id'],
+                                            "review_id": review['id'],
+                                            "subratings": subratings,
+                                            "subratings_normalized": subratings_normalized,
+                                            "text_review": review['text'],
+                                            "text_to_sentiment": text_to_sentiment,
+                                            "vader_sentiment": vader,
+                                            "wordnet_sentiment": wordnet,
+                                            "wordnet_normalized": (wordnet - (-1)) / 2,
+                                            "created_at": datenow
+                                        }
+                                        # pprint.pprint(data)
 
-                            time.sleep(1)
-                            self.client.admin.command(
-                                'refreshSessions', [session.session_id], session=session)
-                        # reviews.close()
+                                        sentimentreview_service.create(data)
+                                    else:
+                                        print("[", datetime.now(), "] Review (",
+                                              review['id'], ") on table Sentiment Review is already exist")
+
+                                except Exception as err:
+                                    print("[", datetime.now(), "]  Err : ", err)
+                                    continue
+
+                                # time.sleep(1)
+                                # self.client.admin.command(
+                                #     'refreshSessions', [session.session_id], session=session)
+                            # reviews.close()
+
+                        else:
+                            print(
+                                "[", datetime.now(), "] Complete saving this hotel's review  ...")
                     else:
                         print(
                             "[", datetime.now(), "] This hotel's review is empty ...")
