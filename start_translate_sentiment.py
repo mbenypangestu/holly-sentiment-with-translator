@@ -61,7 +61,7 @@ class SentimentAggregation(MongoService):
                                 "[", datetime.now(), "] Complete saving this hotel's review  ...")
                         else:
                             for r, review in enumerate(self.db.review.find(
-                                    {'location_id': hotel['location_id']}, no_cursor_timeout=True, session=session)):
+                                    {'location_id': hotel['location_id']}).batch_size(1000)):
                                 try:
                                     isexist_review = any(x['review_id'] == review['id']
                                                          for x in sentimentreviews_on_hotel)
