@@ -31,7 +31,7 @@ class LocationService(MongoService):
                 'Makassar',
                 'Palembang',
             ]}
-        }, no_cursor_timeout=True)
+        }).batch_size(1)
         return locations
 
     def get_locations_indonesia(self):
