@@ -6,3 +6,5 @@ nltk
 pandas
 googletrans
 pysolr
+schedule
+python-crontab

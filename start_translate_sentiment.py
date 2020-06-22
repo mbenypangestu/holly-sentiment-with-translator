@@ -17,6 +17,8 @@ import dateutil
 import json
 import pprint
 from googletrans import Translator
+import schedule
+import time
 
 
 class SentimentAggregation(MongoService):
@@ -233,5 +235,7 @@ class SentimentAggregation(MongoService):
 
 
 if __name__ == "__main__":
-    SentimentAggregation()
-    # time.sleep(10000)
+    schedule.every(1).minutes.do(SentimentAggregation())
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
