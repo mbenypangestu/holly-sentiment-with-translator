@@ -23,6 +23,9 @@ class SentimentAggregation(MongoService):
     def __init__(self):
         super().__init__()
         self.start()
+        self.count_location = 0
+        self.count_hotel = 0
+        self.count_review = 0
 
     def start(self):
         datenow = datetime.now()
@@ -61,7 +64,7 @@ class SentimentAggregation(MongoService):
                                 "[", datetime.now(), "] Complete saving this hotel's review  ...")
                         else:
                             for r, review in enumerate(self.db.review.find(
-                                    {'location_id': hotel['location_id']}).batch_size(500)):
+                                    {'location_id': hotel['location_id']}).batch_size(2000)):
                                 try:
                                     isexist_review = any(x['review_id'] == review['id']
                                                          for x in sentimentreviews_on_hotel)
@@ -124,11 +127,20 @@ class SentimentAggregation(MongoService):
                                 # time.sleep(1)
                                 # self.client.admin.command(
                                 #     'refreshSessions', [session.session_id], session=session)
+
+                                self.count_review += 1
+                                print("\Review Count : ", self.count_review)
                             # reviews.close()
 
                     else:
                         print(
                             "[", datetime.now(), "] This hotel's review is empty ...")
+
+                self.count_hotel += 1
+                print("\nHotel Count : ", self.count_hotel)
+
+            self.count_location += 1
+            print("\nLocation Count : ", self.count_location)
 
         # hotels.close()
         # Break Hotel
