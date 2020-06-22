@@ -20,12 +20,13 @@ from googletrans import Translator
 
 
 class SentimentAggregation(MongoService):
+    self.count_location = 0
+    self.count_hotel = 0
+    self.count_review = 0
+
     def __init__(self):
         super().__init__()
         self.start()
-        self.count_location = 0
-        self.count_hotel = 0
-        self.count_review = 0
 
     def start(self):
         datenow = datetime.now()
