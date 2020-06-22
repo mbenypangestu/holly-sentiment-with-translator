@@ -20,9 +20,9 @@ from googletrans import Translator
 
 
 class SentimentAggregation(MongoService):
-    self.count_location = 0
-    self.count_hotel = 0
-    self.count_review = 0
+    count_location = 0
+    count_hotel = 0
+    count_review = 0
 
     def __init__(self):
         super().__init__()
