@@ -222,13 +222,19 @@ class SentimentAggregation():
                 "text_translated": text_translated,
                 "vader_sentiment": vader,
                 "wordnet_sentiment": wordnet,
-                "created_at": datetime.datetime.now()
+                "created_at": datetime.now()
             }
             sentiment_service.create(data)
 
 
 if __name__ == "__main__":
-    SentimentAggregation()
+    while (True):
+        try:
+            print("[", datetime.now(), "] Starting up .....")
+            SentimentAggregation()
+        except:
+            pass
+
     # schedule.every(1).minutes.do()
     # while True:
     #     schedule.run_pending()
