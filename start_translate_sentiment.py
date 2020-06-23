@@ -229,7 +229,8 @@ class SentimentAggregation():
 
 
 if __name__ == "__main__":
-    schedule.every(1).minutes.do(SentimentAggregation())
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    SentimentAggregation()
+    # schedule.every(1).minutes.do()
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
