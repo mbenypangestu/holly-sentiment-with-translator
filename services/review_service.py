@@ -24,7 +24,7 @@ class ReviewService(MongoService):
 
     def get_review_by_hotel_locationid(self, hotel_locationid):
         reviews = self.db.review.find(
-            {'location_id': hotel_locationid}).batch_size(1000)
+            {'location_id': hotel_locationid}, no_cursor_timeout=True)
         return reviews
 
     def update_review_byid(self, review_id, data_update):
