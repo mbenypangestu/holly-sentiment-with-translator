@@ -89,7 +89,7 @@ class SentimentAggregation():
                           "] Next review .....")
 
                     text_translated = review['text']
-                    text_to_sentiment = checkReviewTranslated(
+                    text_to_sentiment = self.checkReviewTranslated(
                         review, text_translated)
 
                     vader = self.sentiment_analyzer.get_vader(
