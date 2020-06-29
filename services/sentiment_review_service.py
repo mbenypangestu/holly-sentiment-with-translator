@@ -31,6 +31,9 @@ class SentimentReviewService(MongoService):
         })
         return sentiment_review['year']
 
+    def is_sentimented_review_exist(self, review_id):
+        return True if self.db.sentiment_review.find({review_id: review_id}).count() > 0 else False
+
     def get_review_group_hotel_date(self, hotel_id):
         sentiment_reviews = self.db.sentiment_review.aggregate([
             {

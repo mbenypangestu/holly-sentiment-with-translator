@@ -65,12 +65,12 @@ class SentimentAggregation():
                 print(
                     "[", datetime.now(), "] Data reviews on hotel ", hotel['location_id'], " is available ...")
 
-                if sentimentreviews_on_hotel.count() == reviews.count():
-                    print(
-                        "[", datetime.now(), "] Complete saving this hotel's review  ...")
-                else:
+                if sentimentreviews_on_hotel.count() < reviews.count():
                     self.parseReviews(location, hotel, reviews,
                                       sentimentreviews_on_hotel)
+                else:
+                    print(
+                        "[", datetime.now(), "] Complete saving this hotel's review  ...")
             else:
                 print(
                     "[", datetime.now(), "] This hotel's review is empty ...")
@@ -82,8 +82,8 @@ class SentimentAggregation():
     def parseReviews(self, location, hotel, reviews, sentimentreviews_on_hotel):
         for r, review in enumerate(reviews):
             try:
-                isexist_review = any(x['review_id'] == review['id']
-                                     for x in sentimentreviews_on_hotel)
+                isexist_review = self.sentimentreview_service.is_sentimented_review_exist(
+                    review['id'])
                 if not isexist_review:
                     print("\n[", datetime.now(),
                           "] Next review .....")
