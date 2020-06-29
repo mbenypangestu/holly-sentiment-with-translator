@@ -23,13 +23,13 @@ class LocationService(MongoService):
                 'Padang',
                 'Jayapura',
                 'Bandung',
+                'Denpasar',
                 'Jakarta',
                 'Surabaya',
-                'Yogyakarta',
-                'Denpasar',
-                'Samarinda',
-                'Makassar',
-                'Palembang',
+                # 'Yogyakarta',
+                # 'Samarinda',
+                # 'Makassar',
+                # 'Palembang',
             ]}
         }, no_cursor_timeout=True)
         return locations

@@ -228,14 +228,14 @@ class SentimentAggregation():
 
 
 if __name__ == "__main__":
-    while (True):
-        try:
-            print("[", datetime.now(), "] Starting up .....")
-            SentimentAggregation()
-        except:
-            pass
+    # while (True):
+    #     try:
+    #         print("[", datetime.now(), "] Starting up .....")
+    #         SentimentAggregation()
+    #     except:
+    #         pass
 
-    # schedule.every(1).minutes.do()
-    # while True:
-    #     schedule.run_pending()
-    #     time.sleep(1)
+    schedule.every(1).minutes.do(SentimentAggregation())
+    while True:
+        schedule.run_pending()
+        time.sleep(1)
