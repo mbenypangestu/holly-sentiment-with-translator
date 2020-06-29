@@ -47,7 +47,8 @@ class SentimentAggregation():
             self.parseHotels(location)
 
             self.count_location += 1
-            print("\nLocation Count : ", self.count_location)
+            print("\n[", datetime.now(), "] Iterate Location :",
+                  self.count_location, "\n")
         locations.close()
 
     def parseHotels(self, location):
@@ -76,7 +77,8 @@ class SentimentAggregation():
                     "[", datetime.now(), "] This hotel's review is empty ...")
 
             self.count_hotel += 1
-            print("\nHotel Count : ", self.count_hotel)
+            print("\n[", datetime.now(), "] Iterate Hotel :",
+                  self.count_hotel, "\n")
         hotels.close()
 
     def parseReviews(self, location, hotel, reviews, sentimentreviews_on_hotel):
@@ -84,7 +86,11 @@ class SentimentAggregation():
             try:
                 isexist_review = self.sentimentreview_service.is_sentimented_review_exist(
                     review['id'])
-                if not isexist_review:
+
+                print("[", datetime.now(), "] Checking Review Exist %s : %s" %
+                      (review['id'], isexist_review))
+
+                if isexist_review == False:
                     print("\n[", datetime.now(),
                           "] Next review .....")
 
@@ -132,7 +138,8 @@ class SentimentAggregation():
                 continue
 
             self.count_review += 1
-            print("\Review Count : ", self.count_review)
+            print("\n[", datetime.now(), "] Iterate Review :",
+                  self.count_review, "\n")
         reviews.close()
 
     def checkReviewTranslated(self, review, text_translated):
@@ -143,6 +150,8 @@ class SentimentAggregation():
                   review['text'])
             print(
                 "[", datetime.now(), "] Review translated :", text_translated)
+        else:
+            print("[", datetime.now(), "] Review does'nt need to translate (English) !")
         return text_translated
 
     def translate(self, text_to_translate):
@@ -228,14 +237,14 @@ class SentimentAggregation():
 
 
 if __name__ == "__main__":
-    # while (True):
-    #     try:
-    #         print("[", datetime.now(), "] Starting up .....")
-    #         SentimentAggregation()
-    #     except:
-    #         pass
+    while (True):
+        try:
+            print("[", datetime.now(), "] Starting up .....")
+            SentimentAggregation()
+        except:
+            pass
 
-    schedule.every(1).minutes.do(SentimentAggregation())
-    while True:
-        schedule.run_pending()
-        time.sleep(1)
+    # schedule.every(1).minutes.do(SentimentAggregation())
+    # while True:
+    #     schedule.run_pending()
+    #     time.sleep(1)
