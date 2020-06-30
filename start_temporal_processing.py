@@ -59,17 +59,16 @@ class TemporalProcessing(MongoService):
         locations = location_service.get3_indonesia()
 
         for i, location in enumerate(locations):
+            print("\n ", location['name'])
             hotels = self.hotel_service.get_hotels_by_locationid(
                 location['location_id'])
 
             for j, hotel in enumerate(hotels):
-                print("[", self.now, "]", self.count, ") ",
+                print("[", self.now, "]", j+1, ") ",
                       hotel['location_id'], " - ", hotel['name'])
                 self.calculate_sentiment_score(hotel)
                 self.count += 1
-
-            #     break
-            # break
+                j += 1
 
     def calculate_sentiment_score(self, hotel):
         datenow = datetime.now()

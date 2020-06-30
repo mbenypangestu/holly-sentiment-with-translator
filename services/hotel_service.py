@@ -23,7 +23,8 @@ class HotelService(MongoService):
         return hotel
 
     def get_hotels_by_locationid(self, location_id):
-        hotels = self.db.hotel.find({'locationID': location_id}, no_cursor_timeout=True)
+        hotels = self.db.hotel.find(
+            {'locationID': location_id}, no_cursor_timeout=True)
         return hotels
 
     def is_hotel_exist(self, hotel_id):
