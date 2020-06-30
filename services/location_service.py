@@ -25,11 +25,21 @@ class LocationService(MongoService):
                 'Bandung',
                 'Denpasar',
                 'Jakarta',
-                'Surabaya',
+                # 'Surabaya',
                 # 'Yogyakarta',
                 # 'Samarinda',
                 # 'Makassar',
                 # 'Palembang',
+            ]}
+        }, no_cursor_timeout=True)
+        return locations
+
+    def get3_indonesia(self):
+        locations = self.db.location.find({
+            "name": {"$in": [
+                'Padang',
+                'Jayapura',
+                'Bandung'
             ]}
         }, no_cursor_timeout=True)
         return locations

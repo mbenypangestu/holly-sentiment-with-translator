@@ -56,15 +56,15 @@ class TemporalProcessing(MongoService):
     def start(self):
         location_service = LocationService()
 
-        locations = location_service.get_locations_indonesia()
+        locations = location_service.get3_indonesia()
 
         for i, location in enumerate(locations):
             hotels = self.hotel_service.get_hotels_by_locationid(
                 location['location_id'])
 
             for j, hotel in enumerate(hotels):
-                print("[", self.now, "]", self.count, ")========== ",
-                      hotel['name'])
+                print("[", self.now, "]", self.count, ") ",
+                      hotel['location_id'], " - ", hotel['name'])
                 self.calculate_sentiment_score(hotel)
                 self.count += 1
 
@@ -110,7 +110,8 @@ class TemporalProcessing(MongoService):
 
                     if sentiment_review['_id']['month'] == month and sentiment_review['_id']['year'] == year:
                         print("[", self.now, "] -----------------> Changing")
-                        data = self.is_data_change_inmonth(base_var, sentiment_review, hotel, year, month)
+                        data = self.is_data_change_inmonth(
+                            base_var, sentiment_review, hotel, year, month)
 
                     data_temp = copy.deepcopy(data)
                     data_temp['month'] = month
