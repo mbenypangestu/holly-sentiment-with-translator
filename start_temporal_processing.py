@@ -20,12 +20,12 @@ import copy
 
 
 class BaseVar:
-    rating_rooms = 0
-    rating_value = 0
-    rating_sleep_quality = 0
-    rating_location = 0
-    rating_cleanliness = 0
-    rating_service = 0
+    rating_rooms = 0.0
+    rating_value = 0.0
+    rating_sleep_quality = 0.0
+    rating_location = 0.0
+    rating_cleanliness = 0.0
+    rating_service = 0.0
 
     len_rooms = 0
     len_value = 0
@@ -34,12 +34,12 @@ class BaseVar:
     len_cleanliness = 0
     len_service = 0
 
-    wordnet_hotel = 0
+    wordnet_hotel = 0.0
 
-    vader_neg_hotel = 0
-    vader_pos_hotel = 0
-    vader_neu_hotel = 0
-    vader_compound_hotel = 0
+    vader_neg_hotel = 0.0
+    vader_pos_hotel = 0.0
+    vader_neu_hotel = 0.0
+    vader_compound_hotel = 0.0
 
 
 class TemporalProcessing(MongoService):
@@ -253,7 +253,6 @@ class TemporalProcessing(MongoService):
             "vader_pos_score": base_var.vader_pos_hotel,
             "vader_neu_score": base_var.vader_neu_hotel,
             "vader_compound_score": base_var.vader_compound_hotel,
-            "cluster": 0,
             "created_at": self.now
         }
 
